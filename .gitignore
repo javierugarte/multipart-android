@@ -1,0 +1,20 @@
+#android studio
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+.idea/
+*.orig
+*.asc
+*.iml
+
+#eclipse
+bin
+gen
+*.class
+.settings/
+.classpath
+build/
