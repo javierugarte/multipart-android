@@ -11,17 +11,17 @@ How to use this library
 - Using Gradle
 
 ```groovy
-    compile 'com.cocosw:bottomsheet:1.+@aar'
+	compile 'com.bikomobile:multipart:1.0.0'
 ```
 - Using Maven
 
 ```xml
-<dependency>
-    <groupId>com.cocosw</groupId>
-    <artifactId>bottomsheet</artifactId>
-    <version>1.x</version>
-    <type>apklib</type>
-</dependency>
+	<dependency>
+		<groupId>com.bikomobile</groupId>
+		<artifactId>multipart</artifactId>
+		<version>1.0.0</version>
+		<type>pom</type>
+	</dependency>
 ```
 
 - Compile you project with android sdk v15+
