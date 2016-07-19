@@ -12,7 +12,7 @@ How to use this library
 - Using Gradle
 
 ```groovy
-	compile 'com.bikomobile:multipart:1.1.0'
+	compile 'com.bikomobile:multipart:1.1.1'
 ```
 - Using Maven
 
@@ -20,7 +20,7 @@ How to use this library
 	<dependency>
 		<groupId>com.bikomobile</groupId>
 		<artifactId>multipart</artifactId>
-		<version>1.1.0</version>
+		<version>1.1.1</version>
 		<type>pom</type>
 	</dependency>
 ```
