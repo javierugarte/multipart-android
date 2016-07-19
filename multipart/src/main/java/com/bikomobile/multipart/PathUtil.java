@@ -66,6 +66,13 @@ public class PathUtil {
 
                 return getDataColumn(context, contentUri, selection, selectionArgs);
             }
+            // DriveDocument
+            else if (isDriveDocument(uri)) {
+                // I have not found a way to generate the absolute url.
+                // Check from outside if it's a GoogleDrive document.
+                // Generate a bitmap and convert to bytes.
+                return null;
+            }
         }
         // MediaStore (and general)
         else if ("content".equalsIgnoreCase(uri.getScheme())) {
@@ -132,6 +139,14 @@ public class PathUtil {
      */
     public static boolean isDownloadsDocument(Uri uri) {
         return "com.android.providers.downloads.documents".equals(uri.getAuthority());
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is DriveDocument.
+     */
+    public static boolean isDriveDocument(Uri uri) {
+        return "com.google.android.apps.docs.storage".equals(uri.getAuthority());
     }
 
     /**
