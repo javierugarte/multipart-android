@@ -1,5 +1,6 @@
 Multipart Request
 =======
+[ ![Download](https://api.bintray.com/packages/javiergm/maven/multipart-android/images/download.svg) ](https://bintray.com/javiergm/maven/multipart-android/_latestVersion)
 
 What is http multipart request?
 =======
@@ -11,7 +12,7 @@ How to use this library
 - Using Gradle
 
 ```groovy
-	compile 'com.bikomobile:multipart:1.0.0'
+	compile 'com.bikomobile:multipart:1.1.0'
 ```
 - Using Maven
 
@@ -19,7 +20,7 @@ How to use this library
 	<dependency>
 		<groupId>com.bikomobile</groupId>
 		<artifactId>multipart</artifactId>
-		<version>1.0.0</version>
+		<version>1.1.0</version>
 		<type>pom</type>
 	</dependency>
 ```
@@ -38,13 +39,28 @@ Multipart multipart = new Multipart(context);
 - Add a file
 
 ```java
-multipart.addFile(name, videoUri);
+multipart.addFile("image/jpeg", "image", name, imageUri);
+multipart.addFile("video/mp4", "video", name, videoUri);
 ```
 
-- Launch request or get request to launch yourself
+- Add post params
 
 ```java
-multipart.launchRequest("url", "postParam", new Response.Listener<NetworkResponse>() {
+multipart.addParam("key1", "value1");
+multipart.addParam("key2", "value2");
+// or
+
+HashMap<String, String> params = new HashMap<>();
+params.put("key1", "value1");
+params.put("key2", "value2");
+        
+multipart.addParams(params);
+```
+
+- Launch request
+
+```java
+multipart.launchRequest("url", new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
                 Toast.makeText(context, "Success", Toast.LENGTH_LONG).show();
@@ -60,7 +76,7 @@ multipart.launchRequest("url", "postParam", new Response.Listener<NetworkRespons
 - Or get request and launch yourself
 
 ```java
-MultipartRequest multipartRequest = multipart.getRequest("url", "postParam", new Response.Listener<NetworkResponse>() {
+MultipartRequest multipartRequest = multipart.getRequest("url", new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
                 Toast.makeText(context, "Success", Toast.LENGTH_LONG).show();
@@ -79,7 +95,9 @@ VolleySingleton.getInstance(this).addToRequestQueue(multipartRequest);
 Contribute
 =======
 
-- Add more files
+* [X] Add more files
+* [X] Add others post params
+
 
 About me
 =======
