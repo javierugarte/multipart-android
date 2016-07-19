@@ -23,6 +23,7 @@ import com.bikomobile.multipart.Multipart;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -116,8 +117,10 @@ public class MainActivity extends AppCompatActivity {
 
         Multipart multipart = new Multipart(context);
 
-        multipart.addFile(name, imageUri);
-        multipart.launchRequest(UPLOAD_URL, "myfile", new Response.Listener<NetworkResponse>() {
+        multipart.addParam("title", name);
+        multipart.addFile("image/jpeg", "myFile", name, imageUri);
+
+        multipart.launchRequest(UPLOAD_URL, new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
                 Toast.makeText(context, "Success", Toast.LENGTH_LONG).show();
@@ -135,8 +138,13 @@ public class MainActivity extends AppCompatActivity {
 
         Multipart multipart = new Multipart(context);
 
-        multipart.addFile(name, videoUri);
-        multipart.launchRequest(UPLOAD_URL, "myfile", new Response.Listener<NetworkResponse>() {
+        HashMap<String, String> params = new HashMap<>();
+        params.put("title", name);
+        
+        multipart.addParams(params);
+        multipart.addFile("video/mp4", "myfile", name, videoUri);
+
+        multipart.launchRequest(UPLOAD_URL, new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
                 Toast.makeText(context, "Success", Toast.LENGTH_LONG).show();

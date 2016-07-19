@@ -16,6 +16,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class Multipart {
 
@@ -25,8 +28,7 @@ public class Multipart {
     private final static String MIME_TYPE = "multipart/form-data;boundary=" + BOUNDARY;
 
     private final Context mContext;
-    private String mFileName;
-    private byte[] mBytes;
+    private List<EntryMultipart> mMultipartParams = new ArrayList<>();
 
     public Multipart(Context context) {
         this.mContext = context;
@@ -37,19 +39,49 @@ public class Multipart {
      * This url can be parser to {@link PathUtil#getPath(Context, Uri)}
      * if the url does not belong to a file.
      *
-     * @param fileName file name
-     * @param uri      file uri
+     * @param contentType   content type (image/jpeg, video/mp4...)
+     * @param postParam     post param name
+     * @param fileName      file name
+     * @param uri           file uri
      */
-    public void addFile(String fileName, Uri uri) {
-        this.mFileName = fileName;
+    public void addFile(String contentType, String postParam, String fileName, Uri uri) {
+
+        byte [] bytes;
 
         File file = new File(uri.toString());
 
         if (file.isFile()) {
-            mBytes = getBytesFromFile(file);
+            bytes = getBytesFromFile(file);
         } else {
             String videoUrl = PathUtil.getPath(mContext, uri);
-            mBytes = getBytesFromUri(Uri.parse(videoUrl));
+            bytes = getBytesFromUri(Uri.parse(videoUrl));
+        }
+
+        EntryMultipart entryMultipart = new EntryMultipart(contentType, postParam, fileName, bytes);
+        this.mMultipartParams.add(entryMultipart);
+    }
+
+    /**
+     * Added a post param to send request
+     *
+     * @param key       post param key
+     * @param value     post param name
+     */
+    public void addParam(String key, String value) {
+        this.mMultipartParams.add(new EntryMultipart(key, value.getBytes()));
+    }
+
+    /**
+     * Added a map of params to send request
+     *
+     * @param params the map of params
+     */
+    public void addParams(Map<String, String> params) {
+        for (String key : params.keySet()) {
+            EntryMultipart entryMultipart =
+                    new EntryMultipart("text/plain", key, params.get(key).getBytes());
+
+            this.mMultipartParams.add(entryMultipart);
         }
     }
 
@@ -57,17 +89,16 @@ public class Multipart {
      * Launch a request from {@link com.android.volley.Request} to send a file
      *
      * @param url           url from destination
-     * @param postParamName name from param
      * @param listener      listener interface for response
      * @param errorListener listener interface for errors
      */
-    public void launchRequest(String url, String postParamName, Response.Listener<NetworkResponse> listener, Response.ErrorListener errorListener) {
-        if (mBytes == null) {
-            Log.e(getClass().getCanonicalName(), "Added a file");
+    public void launchRequest(String url, Response.Listener<NetworkResponse> listener, Response.ErrorListener errorListener) {
+        if (mMultipartParams.isEmpty()) {
+            Log.e(getClass().getCanonicalName(), "Added a file first");
             return;
         }
 
-        MultipartRequest multipartRequest = getRequest(url, postParamName, listener, errorListener);
+        MultipartRequest multipartRequest = getRequest(url, listener, errorListener);
 
         RequestQueue requestQueue = Volley.newRequestQueue(mContext);
         requestQueue.add(multipartRequest);
@@ -77,39 +108,62 @@ public class Multipart {
      * Return the request generated just in case you want launch yourself
      *
      * @param url           url from destination
-     * @param postParamName name from param
      * @param listener      listener interface for response
      * @param errorListener listener interface for errors
      * @return the request generated
      */
-    public MultipartRequest getRequest(String url, String postParamName, Response.Listener<NetworkResponse> listener, Response.ErrorListener errorListener) {
-        return new MultipartRequest(url, null, MIME_TYPE, getMultipartBody(mBytes, postParamName, mFileName), listener, errorListener);
+    public MultipartRequest getRequest(String url, Response.Listener<NetworkResponse> listener, Response.ErrorListener errorListener) {
+        if (mMultipartParams.isEmpty()) {
+            Log.e(getClass().getCanonicalName(), "Added a file first");
+            return null;
+        }
+
+        return new MultipartRequest(url, null, MIME_TYPE, getMultipartBody(mMultipartParams), listener, errorListener);
     }
 
-    private byte[] getMultipartBody(byte[] bytes, String name, String fileName) {
+    private byte[] getMultipartBody(List<EntryMultipart> multipartParams) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
+
+        for (EntryMultipart entryMultipart : multipartParams) {
+
+            try {
+                buildEntryMultiPart(dataOutputStream, entryMultipart);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        // send multipart form data necessary after file data
         try {
-            buildMultipartBody(dataOutputStream, bytes, name, fileName);
-            // send multipart form data necessary after file data
             dataOutputStream.writeBytes(TWO_HYPHENS + BOUNDARY + TWO_HYPHENS + LINE_END);
-            // pass to multipart body
-            return byteArrayOutputStream.toByteArray();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+        // pass to multipart body
+        return byteArrayOutputStream.toByteArray();
+
     }
 
-    private void buildMultipartBody(DataOutputStream dataOutputStream, byte[] fileData, String name, String fileName) throws IOException {
+    private void buildEntryMultiPart(DataOutputStream dataOutputStream,
+                                     EntryMultipart entryMultipart) throws IOException {
+
         dataOutputStream.writeBytes(TWO_HYPHENS + BOUNDARY + LINE_END);
-        dataOutputStream.writeBytes("Content-Disposition: form-data; " +
-                "name=\"" + name + "\"; " +
-                "filename=\"" + fileName + "\"" + LINE_END);
+
+        dataOutputStream.writeBytes("Content-Disposition: form-data;");
+        dataOutputStream.writeBytes(" name=\"" + entryMultipart.getPostName() + "\"; ");
+
+        if (entryMultipart.getFilename() != null) {
+            dataOutputStream.writeBytes(" filename=\"" + entryMultipart.getFilename() + "\"");
+            dataOutputStream.writeBytes(LINE_END);
+            dataOutputStream.writeBytes("Content-Type: " + entryMultipart.getContentType());
+        }
 
         dataOutputStream.writeBytes(LINE_END);
+        dataOutputStream.writeBytes(LINE_END);
 
-        ByteArrayInputStream fileInputStream = new ByteArrayInputStream(fileData);
+        ByteArrayInputStream fileInputStream = new ByteArrayInputStream(entryMultipart.getData());
         int bytesAvailable = fileInputStream.available();
 
         int maxBufferSize = 1024 * 1024;

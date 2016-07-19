@@ -17,7 +17,8 @@ public class MultipartRequest extends Request<NetworkResponse> {
     private final String mMimeType;
     private final byte[] mMultipartBody;
 
-    public MultipartRequest(String url, Map<String, String> headers, String mimeType, byte[] multipartBody,
+    public MultipartRequest(String url, Map<String, String> headers,
+                            String mimeType, byte[] multipartBody,
                             Response.Listener<NetworkResponse> listener, Response.ErrorListener errorListener) {
         super(Method.POST, url, errorListener);
         this.mListener = listener;
