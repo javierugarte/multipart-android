@@ -1,6 +1,8 @@
 package com.bikomobile.multipart;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
 
@@ -16,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +49,7 @@ public class Multipart {
      */
     public void addFile(String contentType, String postParam, String fileName, Uri uri) {
 
-        byte [] bytes;
+        byte [] bytes = null;
 
         File file = new File(uri.toString());
 
@@ -54,7 +57,18 @@ public class Multipart {
             bytes = getBytesFromFile(file);
         } else {
             String videoUrl = PathUtil.getPath(mContext, uri);
-            bytes = getBytesFromUri(Uri.parse(videoUrl));
+            if (videoUrl != null) {
+                bytes = getBytesFromUri(Uri.parse(videoUrl));
+            } else {
+                // if the image is a GoogleDrive document generate bitmap and convert to bytes
+                if (PathUtil.isDriveDocument(uri)) {
+                    bytes = getBytesFromUri(mContext, uri);
+                }
+            }
+        }
+
+        if (bytes == null) {
+            return;
         }
 
         EntryMultipart entryMultipart = new EntryMultipart(contentType, postParam, fileName, bytes);
@@ -221,6 +235,22 @@ public class Multipart {
         }
 
         return byteArrayOutputStream.toByteArray();
+    }
+
+
+    private static byte[] getBytesFromUri(Context context, Uri uri) {
+        InputStream inputStream = null;
+        try {
+            inputStream = context.getContentResolver().openInputStream(uri);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        Bitmap bmp = BitmapFactory.decodeStream(inputStream);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+
+        return stream.toByteArray();
     }
 
 }
