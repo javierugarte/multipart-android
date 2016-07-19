@@ -24,15 +24,15 @@
 
     <RelativeLayout
         android:layout_width="300dp"
-        android:layout_height="300dp"
+        android:layout_height="250dp"
         android:background="#737373"
         android:layout_marginTop="20dp"
         android:layout_gravity="center">
 
         <ImageView
             android:id="@+id/img_selected"
-            android:layout_width="300dp"
-            android:layout_height="300dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:scaleType="centerCrop" />
 
         <VideoView
