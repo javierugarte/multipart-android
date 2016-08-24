@@ -11,7 +11,6 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.toolbox.Volley;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -177,22 +176,8 @@ public class Multipart {
         dataOutputStream.writeBytes(LINE_END);
         dataOutputStream.writeBytes(LINE_END);
 
-        ByteArrayInputStream fileInputStream = new ByteArrayInputStream(entryMultipart.getData());
-        int bytesAvailable = fileInputStream.available();
-
-        int maxBufferSize = 1024 * 1024;
-        int bufferSize = Math.min(bytesAvailable, maxBufferSize);
-        byte[] buffer = new byte[bufferSize];
-
-        // read file and write it into form...
-        int bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-
-        while (bytesRead > 0) {
-            dataOutputStream.write(buffer, 0, bufferSize);
-            bytesAvailable = fileInputStream.available();
-            bufferSize = Math.min(bytesAvailable, maxBufferSize);
-            bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-        }
+        byte[] bytes = entryMultipart.getData();
+        dataOutputStream.write(bytes);
 
         dataOutputStream.writeBytes(LINE_END);
     }
