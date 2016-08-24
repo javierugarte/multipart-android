@@ -1,6 +1,7 @@
 package com.bikomobile.multipartsample;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -136,6 +137,10 @@ public class MainActivity extends AppCompatActivity {
     private void uploadVideo(String name, Uri videoUri) {
         final Context context = getApplicationContext();
 
+        final ProgressDialog loading = ProgressDialog.show(this,
+                "Uploading...", "Please wait...", false, false);
+
+
         Multipart multipart = new Multipart(context);
 
         HashMap<String, String> params = new HashMap<>();
@@ -148,13 +153,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(NetworkResponse response) {
                 Toast.makeText(context, "Success", Toast.LENGTH_LONG).show();
+                loading.dismiss();
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Toast.makeText(context, "Error", Toast.LENGTH_LONG).show();
+                loading.dismiss();
             }
         });
+
     }
 
     private void showImages(List<Uri> images) {
