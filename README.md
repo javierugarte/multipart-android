@@ -10,7 +10,7 @@ A HTTP multipart request is a HTTP request that HTTP clients construct to send f
 - Using Gradle
 
 ```groovy
-	compile 'com.bikomobile:multipart:1.1.1'
+	compile 'com.bikomobile:multipart:1.1.2'
 ```
 - Using Maven
 
@@ -18,7 +18,7 @@ A HTTP multipart request is a HTTP request that HTTP clients construct to send f
 	<dependency>
 		<groupId>com.bikomobile</groupId>
 		<artifactId>multipart</artifactId>
-		<version>1.1.1</version>
+		<version>1.1.2</version>
 		<type>pom</type>
 	</dependency>
 ```
@@ -93,6 +93,7 @@ VolleySingleton.getInstance(this).addToRequestQueue(multipartRequest);
 
 * [X] Add more files
 * [X] Add others post params
+* [X] Upload google drive videos
 
 
 ## About me

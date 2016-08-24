@@ -11,7 +11,6 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.toolbox.Volley;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -62,7 +61,11 @@ public class Multipart {
             } else {
                 // if the image is a GoogleDrive document generate bitmap and convert to bytes
                 if (PathUtil.isDriveDocument(uri)) {
-                    bytes = getBytesFromUri(mContext, uri);
+                    if (contentType.equalsIgnoreCase("video/mp4")) {
+                        bytes = getBytesFromVideoUri(mContext, uri);
+                    } else {
+                        bytes = getBytesFromImageUri(mContext, uri);
+                    }
                 }
             }
         }
@@ -177,22 +180,8 @@ public class Multipart {
         dataOutputStream.writeBytes(LINE_END);
         dataOutputStream.writeBytes(LINE_END);
 
-        ByteArrayInputStream fileInputStream = new ByteArrayInputStream(entryMultipart.getData());
-        int bytesAvailable = fileInputStream.available();
-
-        int maxBufferSize = 1024 * 1024;
-        int bufferSize = Math.min(bytesAvailable, maxBufferSize);
-        byte[] buffer = new byte[bufferSize];
-
-        // read file and write it into form...
-        int bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-
-        while (bytesRead > 0) {
-            dataOutputStream.write(buffer, 0, bufferSize);
-            bytesAvailable = fileInputStream.available();
-            bufferSize = Math.min(bytesAvailable, maxBufferSize);
-            bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-        }
+        byte[] bytes = entryMultipart.getData();
+        dataOutputStream.write(bytes);
 
         dataOutputStream.writeBytes(LINE_END);
     }
@@ -237,8 +226,54 @@ public class Multipart {
         return byteArrayOutputStream.toByteArray();
     }
 
+    public static byte [] getBytesFromVideoUri(Context context, Uri uri) {
+        InputStream inputStream = null;
+        try {
+            inputStream = context.getContentResolver().openInputStream(uri);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
-    private static byte[] getBytesFromUri(Context context, Uri uri) {
+        if (inputStream == null) {
+            return null;
+        }
+
+        int maxBufferSize = 1024 * 1024;
+        int available = 0;
+        try {
+            available = inputStream.available();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (available == 0) {
+            available = maxBufferSize;
+        }
+
+        int bufferSize = Math.min(available, maxBufferSize);
+
+        byte[] data = new byte[bufferSize];
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int nRead;
+
+        try {
+            while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+                buffer.write(data, 0, nRead);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            buffer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return buffer.toByteArray();
+    }
+
+
+    private static byte[] getBytesFromImageUri(Context context, Uri uri) {
         InputStream inputStream = null;
         try {
             inputStream = context.getContentResolver().openInputStream(uri);
