@@ -110,12 +110,24 @@ public class Multipart {
      * @param errorListener listener interface for errors
      */
     public void launchRequest(String url, Response.Listener<NetworkResponse> listener, Response.ErrorListener errorListener) {
+        launchRequest(url, null, listener, errorListener);
+    }
+
+    /**
+     * Launch a request from {@link com.android.volley.Request} to send a file
+     *
+     * @param url           url from destination
+     * @param headers       headers
+     * @param listener      listener interface for response
+     * @param errorListener listener interface for errors
+     */
+    public void launchRequest(String url, Map<String, String> headers, Response.Listener<NetworkResponse> listener, Response.ErrorListener errorListener) {
         if (mMultipartParams.isEmpty()) {
             Log.e(getClass().getCanonicalName(), "Added a file first");
             return;
         }
 
-        MultipartRequest multipartRequest = getRequest(url, listener, errorListener);
+        MultipartRequest multipartRequest = getRequest(url, headers, listener, errorListener);
 
         RequestQueue requestQueue = Volley.newRequestQueue(mContext);
         requestQueue.add(multipartRequest);
@@ -130,12 +142,25 @@ public class Multipart {
      * @return the request generated
      */
     public MultipartRequest getRequest(String url, Response.Listener<NetworkResponse> listener, Response.ErrorListener errorListener) {
+        return getRequest(url, null, listener, errorListener);
+    }
+
+    /**
+     * Return the request generated just in case you want launch yourself
+     *
+     * @param url           url from destination
+     * @param headers       headers
+     * @param listener      listener interface for response
+     * @param errorListener listener interface for errors
+     * @return the request generated
+     */
+    public MultipartRequest getRequest(String url, Map<String, String> headers, Response.Listener<NetworkResponse> listener, Response.ErrorListener errorListener) {
         if (mMultipartParams.isEmpty()) {
             Log.e(getClass().getCanonicalName(), "Added a file first");
             return null;
         }
 
-        return new MultipartRequest(url, null, MIME_TYPE, getMultipartBody(mMultipartParams), listener, errorListener);
+        return new MultipartRequest(url, headers, MIME_TYPE, getMultipartBody(mMultipartParams), listener, errorListener);
     }
 
     private byte[] getMultipartBody(List<EntryMultipart> multipartParams) {
