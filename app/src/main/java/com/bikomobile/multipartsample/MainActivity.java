@@ -20,24 +20,25 @@ import com.android.volley.NetworkResponse;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.bikomobile.multipart.Multipart;
-import com.bikomobile.multipart.MultipartRequest;
-import com.bikomobile.multipart.UploadFile;
+import com.bikomobile.multipart.Utils.BytesUtils;
+import com.bikomobile.multipart.Utils.SplitBytes;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String UPLOAD_URL = "http://jugarte.es/mpform/post.php";
+    private static final String UPLOAD_URL = "http://jugarte.es/upload/upload.php";
 
     private Uri mVideoUri = null;
     private Uri mImageUri = null;
 
     private static final int SELECT_PHOTO_REQUEST_CODE = 100;
     private static final int SELECT_VIDEO_REQUEST_CODE = 101;
+
+    ProgressDialog loading;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +119,8 @@ public class MainActivity extends AppCompatActivity {
 
         final Context context = getApplicationContext();
 
+        loading = ProgressDialog.show(this, "Uploading...", "Please wait...", false, false);
+
         Multipart multipart = new Multipart(context);
 
         multipart.addParam("title", name);
@@ -126,11 +129,13 @@ public class MainActivity extends AppCompatActivity {
         multipart.launchRequest(UPLOAD_URL, new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
+                loading.dismiss();
                 Toast.makeText(context, "Success", Toast.LENGTH_LONG).show();
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                loading.dismiss();
                 Toast.makeText(context, "Error", Toast.LENGTH_LONG).show();
             }
         });
@@ -139,35 +144,46 @@ public class MainActivity extends AppCompatActivity {
     private void uploadVideo(String name, Uri videoUri) {
         final Context context = getApplicationContext();
 
-        final ProgressDialog loading = ProgressDialog.show(this,
-                "Uploading...", "Please wait...", false, false);
+        loading = ProgressDialog.show(this, "Uploading...", "Please wait...", false, false);
 
+        int size = 1024 * 1024 * 5;
+        byte[] bytes = BytesUtils.getBytesFromVideoUri(context, videoUri);
 
-        UploadFile uploadFile = new UploadFile(context);
-        int fiveMb =  1024 * 1024 * 5;
-        uploadFile.setMaxSizeFromFile(fiveMb);
+        List<SplitBytes.Bytes> array = null;
+        if (bytes != null && bytes.length > 0) {
+            array = SplitBytes.getBytesForPart(bytes, size);
+        }
 
-        HashMap<String, String> params = new HashMap<>();
-        params.put("title", name);
+        updateVideo(name, 0, array);
 
-        uploadFile.addParams(params);
-        uploadFile.addFile("video/mp4", "myfile", name, videoUri);
+    }
 
-        uploadFile.launchRequest(UPLOAD_URL, new Response.Listener<NetworkResponse>() {
+    private void updateVideo(final String title, final int part, final List<SplitBytes.Bytes> array) {
+        if (array == null || array.size() <= part) {
+            loading.dismiss();
+            return;
+        }
+
+        final Multipart multipart = new Multipart(getApplicationContext());
+
+        multipart.addParam("title", title);
+        multipart.addParam("chunk", "" + (part+1));
+        multipart.addParam("chunks", "" + array.size());
+
+        SplitBytes.Bytes bytes = array.get(part);
+        multipart.addFile("video/mp4", "myfile", "video", bytes.getBytes());
+
+        multipart.launchRequest(UPLOAD_URL, new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
-                Toast.makeText(context, "Success", Toast.LENGTH_LONG).show();
-                loading.dismiss();
+                updateVideo(title, part+1, array);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(context, "Error", Toast.LENGTH_LONG).show();
                 loading.dismiss();
             }
         });
-
-
     }
 
     private void showImages(List<Uri> images) {

@@ -10,6 +10,8 @@ import com.android.volley.NetworkResponse;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.toolbox.Volley;
+import com.bikomobile.multipart.Utils.BytesUtils;
+import com.bikomobile.multipart.Utils.PathUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -44,34 +46,30 @@ public class Multipart {
      * @param contentType   content type (image/jpeg, video/mp4...)
      * @param postParam     post param name
      * @param fileName      file name
-     * @param uri           file uri
+     * @param bytes         bytes to send
+     */
+    public void addFile(String contentType, String postParam, String fileName, byte[] bytes) {
+        EntryMultipart entryMultipart = new EntryMultipart(contentType, postParam, fileName, bytes);
+        this.mMultipartParams.add(entryMultipart);
+    }
+
+    /**
+     * Added a file to send request
+     * This url can be parser to {@link PathUtil#getPath(Context, Uri)}
+     * if the url does not belong to a file.
+     *
+     * @param contentType   content type (image/jpeg, video/mp4...)
+     * @param postParam     post param name
+     * @param fileName      file name
+     * @param uri           uri to file
      */
     public void addFile(String contentType, String postParam, String fileName, Uri uri) {
 
-        byte [] bytes = null;
-
-        File file = new File(uri.toString());
-
-        if (file.isFile()) {
-            bytes = getBytesFromFile(file);
+        byte[] bytes;
+        if (contentType.equalsIgnoreCase("video/mp4")) {
+            bytes = BytesUtils.getBytesFromVideoUri(mContext, uri);
         } else {
-            String videoUrl = PathUtil.getPath(mContext, uri);
-            if (videoUrl != null) {
-                bytes = getBytesFromUri(Uri.parse(videoUrl));
-            } else {
-                // if the image is a GoogleDrive document generate bitmap and convert to bytes
-                if (PathUtil.isDriveDocument(uri)) {
-                    if (contentType.equalsIgnoreCase("video/mp4")) {
-                        bytes = getBytesFromVideoUri(mContext, uri);
-                    } else {
-                        bytes = getBytesFromImageUri(mContext, uri);
-                    }
-                }
-            }
-        }
-
-        if (bytes == null) {
-            return;
+            bytes = BytesUtils.getBytesFromImageUri(mContext, uri);
         }
 
         EntryMultipart entryMultipart = new EntryMultipart(contentType, postParam, fileName, bytes);
@@ -209,108 +207,6 @@ public class Multipart {
         dataOutputStream.write(bytes);
 
         dataOutputStream.writeBytes(LINE_END);
-    }
-
-    private static byte[] getBytesFromUri(Uri uri) {
-        File file = new File(uri.toString());
-        return getBytesFromFile(file);
-    }
-
-    private static byte[] getBytesFromFile(File file) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
-        try {
-            FileInputStream fileInputStream = null;
-            try {
-                fileInputStream = new FileInputStream(file);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            int maxBufferSize = 1024 * 1024;
-            int bufferSize = (int) Math.min(file.getTotalSpace(), maxBufferSize);
-            byte[] buffer = new byte[bufferSize];
-
-            // read file and write it into form...
-            int bytesRead = 0;
-
-            if (fileInputStream != null) {
-                bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-            }
-
-            while (bytesRead > 0) {
-                dataOutputStream.write(buffer, 0, bufferSize);
-                int bytesAvailable = fileInputStream.available();
-                bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return byteArrayOutputStream.toByteArray();
-    }
-
-    public static byte [] getBytesFromVideoUri(Context context, Uri uri) {
-        InputStream inputStream = null;
-        try {
-            inputStream = context.getContentResolver().openInputStream(uri);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        if (inputStream == null) {
-            return null;
-        }
-
-        int maxBufferSize = 1024 * 1024;
-        int available = 0;
-        try {
-            available = inputStream.available();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (available == 0) {
-            available = maxBufferSize;
-        }
-
-        int bufferSize = Math.min(available, maxBufferSize);
-
-        byte[] data = new byte[bufferSize];
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        int nRead;
-
-        try {
-            while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
-                buffer.write(data, 0, nRead);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            buffer.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return buffer.toByteArray();
-    }
-
-
-    private static byte[] getBytesFromImageUri(Context context, Uri uri) {
-        InputStream inputStream = null;
-        try {
-            inputStream = context.getContentResolver().openInputStream(uri);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        Bitmap bmp = BitmapFactory.decodeStream(inputStream);
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-
-        return stream.toByteArray();
     }
 
 }
