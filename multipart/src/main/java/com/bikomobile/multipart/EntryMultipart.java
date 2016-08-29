@@ -47,4 +47,8 @@ public class EntryMultipart {
     public boolean isTextPlain() {
         return contentType.equalsIgnoreCase("text/plain");
     }
+
+    public void setData(byte[] data) {
+        this.data = data;
+    }
 }
