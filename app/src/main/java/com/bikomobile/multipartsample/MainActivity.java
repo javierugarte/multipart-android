@@ -20,6 +20,8 @@ import com.android.volley.NetworkResponse;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.bikomobile.multipart.Multipart;
+import com.bikomobile.multipart.MultipartRequest;
+import com.bikomobile.multipart.UploadFile;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -29,7 +31,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String UPLOAD_URL = "http://devel.onepointzero.org/mpform/post.php";
+    private static final String UPLOAD_URL = "http://jugarte.es/mpform/post.php";
 
     private Uri mVideoUri = null;
     private Uri mImageUri = null;
@@ -141,15 +143,17 @@ public class MainActivity extends AppCompatActivity {
                 "Uploading...", "Please wait...", false, false);
 
 
-        Multipart multipart = new Multipart(context);
+        UploadFile uploadFile = new UploadFile(context);
+        int fiveMb =  1024 * 1024 * 5;
+        uploadFile.setMaxSizeFromFile(fiveMb);
 
         HashMap<String, String> params = new HashMap<>();
         params.put("title", name);
-        
-        multipart.addParams(params);
-        multipart.addFile("video/mp4", "myfile", name, videoUri);
 
-        multipart.launchRequest(UPLOAD_URL, new Response.Listener<NetworkResponse>() {
+        uploadFile.addParams(params);
+        uploadFile.addFile("video/mp4", "myfile", name, videoUri);
+
+        uploadFile.launchRequest(UPLOAD_URL, new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
                 Toast.makeText(context, "Success", Toast.LENGTH_LONG).show();
@@ -162,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
                 loading.dismiss();
             }
         });
+
 
     }
 
