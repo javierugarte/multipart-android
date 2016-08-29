@@ -154,11 +154,11 @@ public class MainActivity extends AppCompatActivity {
             array = SplitBytes.getBytesForPart(bytes, size);
         }
 
-        updateVideo(name, 0, array);
+        uploadVideo(name, 0, array);
 
     }
 
-    private void updateVideo(final String title, final int part, final List<SplitBytes.Bytes> array) {
+    private void uploadVideo(final String title, final int part, final List<SplitBytes.Bytes> array) {
         if (array == null || array.size() <= part) {
             loading.dismiss();
             return;
@@ -176,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
         multipart.launchRequest(UPLOAD_URL, new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
-                updateVideo(title, part+1, array);
+                uploadVideo(title, part+1, array);
             }
         }, new Response.ErrorListener() {
             @Override

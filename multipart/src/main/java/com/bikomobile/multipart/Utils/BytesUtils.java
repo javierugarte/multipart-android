@@ -36,8 +36,9 @@ public class BytesUtils {
         if (!file.isFile()) {
             // get the absolute url
             String absoluteUrl = PathUtil.getPath(context, uri);
-            uri = Uri.parse(absoluteUrl);
+
             if (absoluteUrl != null) {
+                uri = Uri.parse(absoluteUrl);
                 file = new File(absoluteUrl);
             }
         }
