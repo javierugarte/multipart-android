@@ -1,4 +1,4 @@
-package com.bikomobile.multipart;
+package com.bikomobile.multipart.Utils;
 
 import android.content.ContentUris;
 import android.content.Context;
