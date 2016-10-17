@@ -49,9 +49,9 @@ public class BytesUtils {
             // if the file is a GoogleDrive document
             if (PathUtil.isDriveDocument(uri)) {
                 if (isVideo) {
-                    getBytesFromDriveVideoUri(context, uri);
+                    bytes = getBytesFromDriveVideoUri(context, uri);
                 } else {
-                    getBytesFromDriveImageUri(context, uri);
+                    bytes = getBytesFromDriveImageUri(context, uri);
                 }
             }
         }
