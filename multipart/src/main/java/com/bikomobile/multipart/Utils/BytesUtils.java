@@ -45,11 +45,11 @@ public class BytesUtils {
 
         bytes = getBytesFromFile(file);
 
-        if (bytes == null) {
+        if (bytes == null || bytes.length == 0) {
             // if the file is a GoogleDrive document
             if (PathUtil.isDriveDocument(uri)) {
                 if (isVideo) {
-                    getBytesFromVideoUri(context, uri);
+                    getBytesFromDriveVideoUri(context, uri);
                 } else {
                     getBytesFromDriveImageUri(context, uri);
                 }
